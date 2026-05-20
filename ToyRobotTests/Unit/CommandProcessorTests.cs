@@ -1,13 +1,15 @@
-﻿using ToyRobotApp;
+﻿using NSubstitute;
+using ToyRobotApp;
 
 namespace ToyRobotTests.Unit;
 
 public class CommandProcessorTests
 {
-    private const int TableSize = 5;
+    private const int TableSizeX = 5;
+    private const int TableSizeY = 5;
 
-    private readonly Table _table = new(TableSize, TableSize);
-    private readonly Robot _robot = new();
+    private readonly Table _table = new(TableSizeX, TableSizeY);
+    private readonly IRobot _robot = Substitute.For<IRobot>();
     private readonly CommandProcessor _processor;
 
     protected CommandProcessorTests()
@@ -21,9 +23,13 @@ public class CommandProcessorTests
         [MemberData(nameof(CommandsOtherThanPlace))]
         public void Command_BeforePlace_IsIgnored(string command)
         {
+            _robot.IsPlaced.Returns(false);
             _processor.Process(command);
-
-            Assert.False(_robot.IsPlaced);
+            
+            _robot.DidNotReceive().MoveTo(Arg.Any<Position>());
+            _robot.DidNotReceive().RotateLeft();
+            _robot.DidNotReceive().RotateRight();
+            _robot.DidNotReceive().Place(Arg.Any<Position>(), Arg.Any<Direction>());
         }
 
         public static TheoryData<string> CommandsOtherThanPlace =>
@@ -38,14 +44,17 @@ public class CommandProcessorTests
     public class MoveTests : CommandProcessorTests
     {
         [Fact]
-        public void Move_FacingNorth_IncrementsY_AndNotX()
+        public void Move_DelegatesToRobot()
         {
-            _processor.Process("PLACE 0,0,NORTH");
+            var position = new Position(0, 0);
+            var newPosition = new Position(0, 1);
+            _robot.IsPlaced.Returns(true);
+            _robot.Position.Returns(position);
+            _robot.Facing.Returns(Direction.North);
+            _robot.GetNextForwardPosition().Returns(newPosition);
             _processor.Process("MOVE");
-
-            Assert.True(_robot.IsPlaced);
-            Assert.Equal(0, _robot.X);
-            Assert.Equal(1, _robot.Y);
+            
+            _robot.Received().MoveTo(newPosition);
         }
         
         [Fact]
@@ -55,8 +64,8 @@ public class CommandProcessorTests
             _processor.Process("MOVE");
 
             Assert.True(_robot.IsPlaced);
-            Assert.Equal(1, _robot.X);
-            Assert.Equal(0, _robot.Y);
+            Assert.Equal(1, _robot.Position!.X);
+            Assert.Equal(0, _robot.Position.Y);
         }
         
         [Fact]
@@ -66,8 +75,8 @@ public class CommandProcessorTests
             _processor.Process("MOVE");
 
             Assert.True(_robot.IsPlaced);
-            Assert.Equal(1, _robot.X);
-            Assert.Equal(0, _robot.Y);
+            Assert.Equal(1, _robot.Position!.X);
+            Assert.Equal(0, _robot.Position.Y);
         }
 
         [Fact]
@@ -77,8 +86,8 @@ public class CommandProcessorTests
             _processor.Process("MOVE");
 
             Assert.True(_robot.IsPlaced);
-            Assert.Equal(0, _robot.X);
-            Assert.Equal(1, _robot.Y);
+            Assert.Equal(0, _robot.Position!.X);
+            Assert.Equal(1, _robot.Position.Y);
         }
 
         [Theory]
@@ -89,8 +98,8 @@ public class CommandProcessorTests
             _processor.Process("MOVE");
 
             Assert.True(_robot.IsPlaced);
-            Assert.Equal(expectedX, _robot.X);
-            Assert.Equal(expectedY, _robot.Y);
+            Assert.Equal(expectedX, _robot.Position!.X);
+            Assert.Equal(expectedY, _robot.Position.Y);
         }
 
         public static TheoryData<string, int, int> EdgeCases => new()
@@ -151,8 +160,8 @@ public class CommandProcessorTests
 
             Assert.True(_robot.IsPlaced);
             Assert.Equal(expectedFacing, _robot.Facing);
-            Assert.Equal(expectedX, _robot.X);
-            Assert.Equal(expectedY, _robot.Y);
+            Assert.Equal(expectedX, _robot.Position!.X);
+            Assert.Equal(expectedY, _robot.Position.Y);
         }
         
         public static TheoryData<string, Direction, int, int> Placements => new()
@@ -175,8 +184,8 @@ public class CommandProcessorTests
 
             Assert.True(_robot.IsPlaced);
             Assert.Equal(expectedFacing, _robot.Facing);
-            Assert.Equal(expectedX, _robot.X);
-            Assert.Equal(expectedY, _robot.Y);
+            Assert.Equal(expectedX, _robot.Position!.X);
+            Assert.Equal(expectedY, _robot.Position.Y);
         }
         
         [Fact]
@@ -192,8 +201,8 @@ public class CommandProcessorTests
 
             Assert.True(_robot.IsPlaced);
             Assert.Equal(expectedFacing, _robot.Facing);
-            Assert.Equal(expectedX, _robot.X);
-            Assert.Equal(expectedY, _robot.Y);
+            Assert.Equal(expectedX, _robot.Position!.X);
+            Assert.Equal(expectedY, _robot.Position.Y);
         }
         
         [Theory]
@@ -218,8 +227,8 @@ public class CommandProcessorTests
 
             Assert.True(_robot.IsPlaced);
             Assert.Equal(expectedFacing, _robot.Facing);
-            Assert.Equal(expectedX, _robot.X);
-            Assert.Equal(expectedY, _robot.Y);
+            Assert.Equal(expectedX, _robot.Position!.X);
+            Assert.Equal(expectedY, _robot.Position.Y);
         }
 
         public static TheoryData<string> OutOfBoundsPlacements =>
@@ -246,8 +255,8 @@ public class CommandProcessorTests
             
             Assert.True(_robot.IsPlaced);
             Assert.Equal(expectedFacing, _robot.Facing);
-            Assert.Equal(expectedX, _robot.X);
-            Assert.Equal(expectedY, _robot.Y);
+            Assert.Equal(expectedX, _robot.Position!.X);
+            Assert.Equal(expectedY, _robot.Position.Y);
         }
 
         public static TheoryData<string> InvalidCommands =>
@@ -266,6 +275,8 @@ public class CommandProcessorTests
             "PLACE 1,2,0 NORTH", // Extra position
             "PLACE 1,2, NORTH", // Extra space
             "PLACE 1,2, NORTH, WEST",
+            "MOVE LEFT",
+            "MOVE 1,2,NORTH",
             "MOVE PLACE 1,2,NORTH",
             "RIGHT PLACE 1,2,NORTH",
             "LEFT PLACE 1,2,NORTH",
