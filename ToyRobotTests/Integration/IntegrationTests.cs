@@ -1,3 +1,4 @@
+namespace ToyRobotTests.Integration;
 using System.Diagnostics;
 
 public class IntegrationTests
