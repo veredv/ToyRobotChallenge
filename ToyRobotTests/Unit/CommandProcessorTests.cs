@@ -201,6 +201,18 @@ public class CommandProcessorTests
             
             Assert.Equal(expectedOutput, actualOutput);
         }
+        
+        [Fact]
+        public void Report_BeforePlace_DoesNotOutput()
+        {
+            _robot.IsPlaced.Returns(false);
+            
+            var actualOutput = CaptureOutput(() => _processor.Process("REPORT"));
+
+            Assert.Equal(string.Empty, actualOutput);
+            
+            
+        }
 
         private static string CaptureOutput(Action action)
         {

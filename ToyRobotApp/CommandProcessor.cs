@@ -17,6 +17,8 @@ public class CommandProcessor(Table table, IRobot robot)
 
     private void ProcessMove()
     {
+        if (!robot.IsPlaced) return;
+        
         var nextPosition = robot.GetNextForwardPosition();
         if (table.IsValidPosition(nextPosition))
         {
@@ -27,6 +29,7 @@ public class CommandProcessor(Table table, IRobot robot)
     private void ProcessCommand(string command)
     {
         if (!robot.IsPlaced) return;
+        
         switch (command)
         {
             case "MOVE" : ProcessMove(); break;
@@ -55,7 +58,12 @@ public class CommandProcessor(Table table, IRobot robot)
         }
     }
 
-    private string ProcessReport() => $"{robot.Position!.X},{robot.Position.Y},{robot.Facing.ToString().ToUpperInvariant()}";
+
+    private string ProcessReport()
+    {
+        var position = robot.Position!;
+        return $"{position.X},{position.Y},{robot.Facing.ToString().ToUpperInvariant()}";   
+    }
 
     private void ProcessRight() => robot.RotateRight();
 
