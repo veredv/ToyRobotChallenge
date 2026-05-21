@@ -14,10 +14,12 @@ The application is structured around three core components:
 The robot is deliberately "dumb" — it does what it's told without checking boundaries. The `CommandProcessor` is responsible for asking the `Table` whether a move is valid before instructing the `Robot`. This mirrors a real-world separation of concerns — the table defines the environment, the operator enforces the rules, the robot executes.
 
 ### Interface
-`Robot` implements `IRobot` to allow the `CommandProcessor` to be tested in isolation using a mock, verifying delegation behaviour without coupling tests to `Robot` internals.
+Robot implements IRobot to enable the CommandProcessor to be tested in isolation using a mock, verifying delegation behaviour without coupling tests to `Robot` internals.
+This keeps routing/parsing tests focused on orchestration rather than robot state transitions.
 
 ### Parsing
-Commands are parsed strictly — exact format required, no extra spaces or arguments tolerated. `PLACE` is the only two-part command (`PLACE X,Y,F`) and is handled separately from single-word commands.
+Commands are parsed strictly — exact syntax required, no extra spaces or arguments tolerated. This is, however, case insensitive.
+`PLACE` is the only two-part command (`PLACE X,Y,F`) and is handled separately from single-word commands.
 
 ### Position
 `Position` is a record struct — immutable value type. Movement produces a new `Position` rather than mutating the existing one, keeping `Robot` state changes explicit and intentional.
@@ -41,7 +43,7 @@ An `IRobot` interface is used by `CommandProcessor` to make unit testing easier.
 A few minor trade-offs were made intentionally:
 - Input parsing is strict rather than highly permissive. Invalid or malformed commands are ignored safely.
 - `REPORT` writes directly to console output to keep the solution simple.
-- Integration tests use `dotnet run` for end-to-end verification, which is slower and heavier than redirecting in-memory I/O streams using TextWriter and TextReaderbut provides confidence that the application works as a real console app.
+- Integration tests use `dotnet run` for end-to-end verification, which is slower and heavier than redirecting in-memory I/O streams using TextWriter and TextReader, but validates the real executable entry point and console interaction.
 
 ---
 
@@ -65,11 +67,12 @@ dotnet test
 ```
 
 ---
+
 ## Running the Application
 
 ### Prerequisites
 
-- .NET SDK installed
+- .NET SDK 10.0 installed
 
 ### Run with an input file
 ```bash
