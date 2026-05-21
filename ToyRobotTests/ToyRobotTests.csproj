@@ -16,6 +16,12 @@
         <PackageReference Include="xunit.runner.visualstudio" Version="3.1.4" />
     </ItemGroup>
 
+<!--    <ItemGroup>-->
+<!--        <Content Include="Integration/TestData/**">-->
+<!--            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>-->
+<!--        </Content>-->
+<!--    </ItemGroup>-->
+
     <ItemGroup>
         <Using Include="Xunit" />
     </ItemGroup>

@@ -11,6 +11,7 @@ public class CommandProcessor(Table table, IRobot robot)
                 break;
             case 2 when commandParts[0] == "PLACE" : ProcessPlace(commandParts[1]);
                 break;
+            default: return;
         }
     }
 
